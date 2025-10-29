@@ -9,22 +9,20 @@ exec 1>&2
 set -eu
 
 show_help() {
-	echo "Usage: $0 [-o] <puml sources folder> <output folder>"
-	echo "       -o to generate diagrams only for staged changes"
-	echo "       -s to automatically stage all generated diagrams"
+	echo "Usage: $0 [-p] <puml sources folder> <output folder>"
+	echo "       -p script is used as pre-commit hook, it will generate diagrams"
+	echo "          ony for staged changes and stage the generated diagrams"
 }
 
-ONLY_STAGED=false
-STAGE_GENERATED_DIAGRAMS=false
+PRE_COMMIT=false
 
-while getopts 'hos' opt; do
+while getopts 'hp' opt; do
 	case $opt in
 	h)
 		show_help
 		exit
 		;;
-	o) ONLY_STAGED=true ;;
-	s) STAGE_GENERATED_DIAGRAMS=true ;;
+	p) PRE_COMMIT=true ;;
 	esac
 done
 shift "$((OPTIND - 1))"
@@ -42,15 +40,14 @@ if ! which docker >&/dev/null; then
 	exit 1
 fi
 
-# Checks if there are any changes in the sources or in the generated diagrams
-# If ONLY_STAGED is set we check only for staged changes
-if ! git diff --quiet $($ONLY_STAGED && echo --staged) -- "$IN_DIR" "$OUT_DIR"; then
+# If PRE_COMMIT is set we check if there are staged changes
+if ! $PRE_COMMIT || ! git diff --quiet --staged -- "$IN_DIR" "$OUT_DIR"; then
 
 	# Pulling the image before doing anything in so that we do nothing if the pull fails
 	echo "Pulling plantuml image"
 	docker pull plantuml/plantuml:latest >&/dev/null
 
-	if $ONLY_STAGED; then
+	if $PRE_COMMIT; then
 		# Stashing everything that is not staged (so we can build images only of what will be committed)
 		git stash push --quiet --keep-index --include-untracked
 		# Now we have just the staged changes
@@ -64,7 +61,7 @@ if ! git diff --quiet $($ONLY_STAGED && echo --staged) -- "$IN_DIR" "$OUT_DIR"; 
 	mkdir "$TEMP_GEN"
 	cp -r "$IN_DIR/"* "$TEMP_SRC"
 
-	if $ONLY_STAGED; then
+	if $PRE_COMMIT; then
 		# Resetting the repo in order to avoid merge conflicts when popping the stash
 		git reset --quiet --hard
 		# Here we pop while also restoring the index because from now on we can work on the temp folder
@@ -77,8 +74,8 @@ if ! git diff --quiet $($ONLY_STAGED && echo --staged) -- "$IN_DIR" "$OUT_DIR"; 
 		rm -rf "$OUT_DIR"
 		cp -r "$TEMP_GEN" "$OUT_DIR"
 
-		if $STAGE_GENERATED_DIAGRAMS; then
-			# Staging the generated diagrams in order to commit them
+		if $PRE_COMMIT; then
+			# Staging the generated diagrams
 			git add "$OUT_DIR"
 		fi
 
