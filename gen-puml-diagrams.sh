@@ -1,34 +1,54 @@
 #!/bin/sh
 
-# This scripts generates the PUML diagrams for every commit.
-# It aims at generating diagrams according to the actually staged changes.
-
 # Redirect output to stderr.
 exec 1>&2
 
 set -eu
 
-show_help() {
-	echo "Usage: $0 [-p] <puml sources folder> <output folder>"
-	echo "       -p script is used as pre-commit hook, it will generate diagrams"
-	echo "          ony for staged changes and stage the generated diagrams"
+usage() {
+	cat <<EOF
+Usage: $(basename "$0") [options] <diagram sources folder> <output folder>
+
+Generate PlantUML diagrams contained in <diagram sources folder> into
+<output folder> maintaining the folders structure.
+
+Options:
+  -h  Show this help and exit
+  -p  (pre-commit) The script will generate diagrams reflecting only the staged
+      changes and adding the generated diagrams to the stage. It is meant to be
+      run as a pre-commit git hook
+
+Examples:
+  $(basename "$0") diagrams/src diagrams/gen
+  $(basename "$0") -p diagrams/src diagrams/gen
+EOF
 }
 
 PRE_COMMIT=false
 
-while getopts 'hp' opt; do
+while getopts ':hp' opt; do
 	case $opt in
 	h)
-		show_help
+		usage
 		exit
 		;;
 	p) PRE_COMMIT=true ;;
+	:)
+		echo "Error: Option -$OPTARG requires an argument."
+		usage
+		exit 1
+		;;
+	\?)
+		echo "Error: Invalid option -$OPTARG"
+		usage
+		exit 1
+		;;
 	esac
 done
 shift "$((OPTIND - 1))"
 
 if [ $# -lt 2 ]; then
-	show_help
+	usage
 	exit 1
 fi
 
