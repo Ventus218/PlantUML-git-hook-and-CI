@@ -44,8 +44,8 @@ fi
 if ! $PRE_COMMIT || ! git diff --quiet --staged -- "$IN_DIR" "$OUT_DIR"; then
 
 	# Pulling the image before doing anything in so that we do nothing if the pull fails
-	echo "Pulling plantuml image"
-	docker pull plantuml/plantuml:latest >&/dev/null
+	echo "Pulling plantuml Docker image..."
+	docker pull plantuml/plantuml:latest
 
 	if $PRE_COMMIT; then
 		# Stashing everything that is not staged (so we can build images only of what will be committed)
