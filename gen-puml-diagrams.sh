@@ -72,7 +72,7 @@ if ! git diff --quiet $($ONLY_STAGED && echo --staged) -- "$IN_DIR" "$OUT_DIR"; 
 	fi
 
 	echo "Generating UML diagrams"
-	if docker run --rm -v /${TEMP_SRC}:/data plantuml/plantuml:latest -failfast2 -o ../gen //data/src; then
+	if docker run --rm -v /${TEMP_DIR}:/data plantuml/plantuml:latest -failfast2 -o ../gen //data/src; then
 		# Substituting the generated folder with the new one
 		rm -rf "$OUT_DIR"
 		cp -r "$TEMP_GEN" "$OUT_DIR"
