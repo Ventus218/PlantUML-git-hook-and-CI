@@ -81,6 +81,7 @@ if ! $PRE_COMMIT || ! git diff --quiet --staged -- "$IN_DIR" "$OUT_DIR"; then
 
 		# Remove temporary folder
 		rm -rf "$TEMP_DIR"
+		echo Done!
 	else
 		# Remove temporary folder
 		rm -rf "$TEMP_DIR"
