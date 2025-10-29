@@ -59,7 +59,9 @@ if ! git diff --quiet $($ONLY_STAGED && echo --staged) -- "$IN_DIR" "$OUT_DIR"; 
 	# Copying the sources folder into a temporary one
 	TEMP_DIR=$(mktemp -d)
 	TEMP_SRC="$TEMP_DIR/src"
+	mkdir "$TEMP_SRC"
 	TEMP_GEN="$TEMP_DIR/gen"
+	mkdir "$TEMP_GEN"
 	cp -r "$IN_DIR/"* "$TEMP_SRC"
 
 	if $ONLY_STAGED; then
