@@ -1,0 +1,67 @@
+name: "Check diagrams"
+description: "Checks that PlantUML diagrams are correctly generated for every commit."
+author: "Ventus218"
+inputs:
+  src:
+    description: "Folder containing the PlantUML diagram sources"
+    required: true
+  gen:
+    description: "Folder containing the PlantUML generated diagrams"
+    required: true
+  fail_fast:
+    description: "If true, stop on first failing commit. If false, run all commits and report failure at the end."
+    required: false
+    default: "true"
+runs:
+  using: "composite"
+  steps:
+    - name: Check out repository
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Check every commit
+      shell: bash
+      run: |
+        set -eu
+
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE_COMMIT="${{ github.event.pull_request.base.sha }}"
+          echo "Pull request detected"
+        elif [ "${{ github.event_name }}" = "push" ]; then
+          BASE_COMMIT="${{ github.event.push.before }}"
+        else 
+          echo "Triggered by unexpected event ${{ github.event_name }}"
+          echo "Only pull_request and push are supported"
+          exit 1
+        fi
+        HEAD="${{ github.sha }}"
+
+        COMMITS=$(git log --format="%H" --reverse "$BASE_COMMIT..$HEAD")
+
+        echo "Commits to check:"
+        echo "$COMMITS"
+
+        FAILED_COMMITS=""
+
+        for C in "$COMMITS"; do
+          git checkout --quiet "$C"
+
+          ./gen-puml-diagrams.sh "${{ inputs.src }}" "${{ inputs.gen }}"
+
+          if [ -n "$(git status --porcelain)" ]; then
+            FAILED_COMMITS="$FAILED_COMMITS\n$C"
+            echo "DIAGRAMS NOT UP TO DATE IN COMMIT: $C"
+            if [ "${{ inputs.fail_fast }}" = "true" ]; then
+              echo "Fail-fast enabled: exiting immediately with failure."
+              exit 1
+            fi
+          fi
+          git reset --hard && git clean -fd # Remove all changes (including untracked files)
+        done
+
+        if [ -n "$FAILED_COMMITS" ]; then
+          exit 1
+        else
+          echo "All commits passed the check."
+        fi
