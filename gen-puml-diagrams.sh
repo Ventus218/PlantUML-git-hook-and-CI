@@ -53,10 +53,6 @@ if ! git diff --quiet $($ONLY_STAGED && echo --staged) -- "$IN_DIR" "$OUT_DIR"; 
 	if $ONLY_STAGED; then
 		# Stashing everything that is not staged (so we can build images only of what will be committed)
 		git stash push --quiet --keep-index --include-untracked
-		# Resetting the repo in order to avoid merge conflicts when popping the stash
-		git reset --quiet --hard
-		# Removing untracked files as this is not done by git reset (they will be restored when popping the stash)
-		git clean --quiet -fd
 		# Now we have just the staged changes
 	fi
 
@@ -67,6 +63,8 @@ if ! git diff --quiet $($ONLY_STAGED && echo --staged) -- "$IN_DIR" "$OUT_DIR"; 
 	cp -r "$IN_DIR/"* "$TEMP_SRC"
 
 	if $ONLY_STAGED; then
+		# Resetting the repo in order to avoid merge conflicts when popping the stash
+		git reset --quiet --hard
 		# Here we pop while also restoring the index because from now on we can work on the temp folder
 		git stash pop --quiet --index
 	fi
