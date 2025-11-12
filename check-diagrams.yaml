@@ -1,5 +1,6 @@
 name: "Check diagrams"
-description: "Checks that PlantUML diagrams are correctly generated for every commit."
+description:
+  "Checks that PlantUML diagrams are correctly generated for every commit."
 author: "Ventus218"
 inputs:
   src:
@@ -9,7 +10,9 @@ inputs:
     description: "Folder containing the PlantUML generated diagrams"
     required: true
   fail_fast:
-    description: "If true, stop on first failing commit. If false, run all commits and report failure at the end."
+    description:
+      "If true, stop on first failing commit. If false, run all commits and
+      report failure at the end."
     required: false
     default: "true"
 runs:
