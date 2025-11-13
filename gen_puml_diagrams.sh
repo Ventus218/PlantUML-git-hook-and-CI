@@ -5,7 +5,7 @@ exec 1>&2
 
 set -eu
 
-DEFAULT_CONFIG_FILE_NAME="gen-puml-diagrams-config.sh"
+DEFAULT_CONFIG_FILE_NAME="gen_puml_diagrams_config.sh"
 
 usage() {
     BASENAME=$(basename "$0")
