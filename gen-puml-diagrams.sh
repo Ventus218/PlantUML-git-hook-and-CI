@@ -26,6 +26,8 @@ Configuration file:
     The configuration file can be specified by the -c option, otherwise a file
     named "$DEFAULT_CONFIG_FILE_NAME" will be recursively searched upward from
     this script location.
+    Paths defined inside the configuration file will be interpreted as relative
+    from the configuration file location.
     The configuration file content should be something like the following:
 
         INPUT_DIR=diagrams/src
@@ -112,13 +114,36 @@ else
     echo "Sourcing configuration file" >&2
     # shellcheck disable=SC1090
     . "$CONFIG_FILE"
+
+    # Paths inside the configuration file may be relative and should be interpreted
+    # as relative to the configuration file, not the current working directory
+    CONFIG_DIR=$(dirname "$CONFIG_FILE")
+    CWD=$(pwd)
+    cd "$CONFIG_DIR"
+    if [ -d "$INPUT_DIR" ]; then # Don't need an else block since i'll check this again later
+        INPUT_DIR=$(
+            cd "$INPUT_DIR"
+            pwd
+        )
+    fi
+    if [ -d "$OUTPUT_DIR" ]; then # Don't need an else block since i'll check this again later
+        OUTPUT_DIR=$(
+            cd "$OUTPUT_DIR"
+            pwd
+        )
+    fi
+    cd "$CWD"
 fi
 
-if [ ! -d "$INPUT_DIR" ] || [ ! -d "$OUTPUT_DIR" ]; then
-    echo "Error: invalid input directory ($INPUT_DIR) or output directory ($OUTPUT_DIR)" >&2
-    usage
-    exit 1
-fi
+check_input_or_output_dir() {
+    if [ ! -d "$1" ]; then
+        echo "Error: invalid $2 directory \"$1\"" >&2
+        usage
+        exit 1
+    fi
+}
+check_input_or_output_dir "$INPUT_DIR" "input"
+check_input_or_output_dir "$OUTPUT_DIR" "output"
 
 if ! command -v docker >/dev/null 2>&1; then
     echo "Error: Docker is required for generating PlantUML diagrams" >&2
