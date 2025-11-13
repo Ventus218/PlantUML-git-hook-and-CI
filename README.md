@@ -19,7 +19,7 @@ Docker is required as it is used to run the plantuml container which generates
 the diagrams.
 
 ```sh
-wget https://raw.githubusercontent.com/Ventus218/PlantUML-git-hook-and-CI/refs/heads/main/gen-puml-diagrams.sh
+wget https://raw.githubusercontent.com/Ventus218/PlantUML-git-hook-and-CI/refs/heads/main/gen_puml_diagrams.sh
 ```
 
 ## Usage
@@ -29,11 +29,11 @@ hook paste this in you pre-commit file:
 
 ```sh
 REPO_ROOT="$(dirname $0)/../.."
-$REPO_ROOT/gen-puml-diagrams.sh -p <diagram sources folder> <output folder>
+$REPO_ROOT/gen_puml_diagrams.sh -p <diagram sources folder> <output folder>
 ```
 
 Otherwise if you just want to generate the diagrams you can run:
 
 ```sh
-./gen-puml-diagrams.sh <diagram sources folder> <output folder>
+./gen_puml_diagrams.sh <diagram sources folder> <output folder>
 ```
