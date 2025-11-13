@@ -3,11 +3,10 @@ description:
   "Checks that PlantUML diagrams are correctly generated for every commit."
 author: "Ventus218"
 inputs:
-  src:
-    description: "Folder containing the PlantUML diagram sources"
-    required: true
-  gen:
-    description: "Folder containing the PlantUML generated diagrams"
+  gen_diagrams_command:
+    description:
+      "Command to run in order to generate diagrams. For example:
+      ./gen_puml_diagrams.sh"
     required: true
   fail_fast:
     description:
@@ -50,7 +49,7 @@ runs:
         for C in $COMMITS; do
           git checkout --quiet "$C"
 
-          ./gen-puml-diagrams.sh "${{ inputs.src }}" "${{ inputs.gen }}"
+          bash -c ${{ inputs.gen_diagrams_command }}
 
           if [ -n "$(git status --porcelain)" ]; then
             FAILED_COMMITS="$FAILED_COMMITS\n$C"
