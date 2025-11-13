@@ -47,7 +47,7 @@ runs:
 
         FAILED_COMMITS=""
 
-        for C in "$COMMITS"; do
+        for C in $COMMITS; do
           git checkout --quiet "$C"
 
           ./gen-puml-diagrams.sh "${{ inputs.src }}" "${{ inputs.gen }}"
