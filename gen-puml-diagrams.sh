@@ -6,21 +6,24 @@ exec 1>&2
 set -eu
 
 usage() {
+    BASENAME=$(basename "$0")
     cat <<EOF
-Usage: $(basename "$0") [options] <diagram sources folder> <output folder>
+Usage: $BASENAME [-h] [-p] <input-dir> <output-dir>
 
-Generate PlantUML diagrams contained in <diagram sources folder> into
-<output folder> maintaining the folders structure.
+Generate PlantUML diagrams contained in <input-dir> into
+<output-dir> mirroring the folders structure.
+<input-dir> and <output-dir> are directly passed to PlantUML so if you want to
+understand better how it works you should read the PlantUML CLI documentation.
 
 Options:
-  -h  Show this help and exit
+  -h  Show this message and exit
   -p  (pre-commit) The script will generate diagrams reflecting only the staged
       changes and adding the generated diagrams to the stage. It is meant to be
       run as a pre-commit git hook
 
 Examples:
-  $(basename "$0") diagrams/src diagrams/gen
-  $(basename "$0") -p diagrams/src diagrams/gen
+  $BASENAME diagrams/src diagrams/gen
+  $BASENAME -p diagrams/src diagrams/gen
 EOF
 }
 
