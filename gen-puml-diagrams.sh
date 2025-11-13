@@ -82,8 +82,7 @@ if ! $PRE_COMMIT || ! git diff --quiet --staged -- "$IN_DIR" "$OUT_DIR"; then
     mkdir "$TEMP_SRC"
     TEMP_GEN="$TEMP_DIR/gen"
     mkdir "$TEMP_GEN"
-    # TODO: the following line will fail if there are no diagram sources
-    cp -r "$IN_DIR/"* "$TEMP_SRC"
+    cp -r "$IN_DIR/"* "$TEMP_SRC" || true # TODO: should we suppress stderr?
 
     if $PRE_COMMIT; then
         # Resetting the repo in order to avoid merge conflicts when popping the stash
