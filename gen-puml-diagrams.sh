@@ -55,7 +55,7 @@ fi
 IN_DIR="$1"
 OUT_DIR="$2"
 
-if ! which docker >&/dev/null; then
+if ! command -v docker >/dev/null 2>&1; then
     echo "Docker is required for generating PlantUML diagrams"
     exit 1
 fi
