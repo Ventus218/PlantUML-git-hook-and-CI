@@ -116,3 +116,61 @@ help documentation for a comprehensive overview:
 ```sh
 ./gen_puml_diagrams.sh -h
 ```
+
+## 🤔 Why these decisions were made
+
+The approach outlined for managing PlantUML diagrams involves some
+decisions—specifically, **committing generated diagrams** and **using a
+pre-commit hook over relying solely on CI**—that deviate from typical software
+development best practices. Here is the rationale behind these choices,
+prioritizing **consistency, visibility, and reliability** in documentation.
+
+### Why commit generated diagrams?
+
+Generally, committing build artifacts or generated files is discouraged to keep
+repositories lean and history clean. However, for PlantUML diagrams embedded in
+**Markdown documentation**, this practice becomes really useful for two reasons:
+
+1.  **Platform rendering (e.g., GitHub):** Platforms like GitHub, GitLab, and
+    Bitbucket **do not** automatically render raw PlantUML code blocks into
+    images (unlike some support for **Mermaid**). To have a visible diagram
+    _instantly_ rendered within your documentation, you must provide a standard
+    image file (like an SVG or PNG) and link to it.
+2.  **Offline and reliable viewing:** While some tools offer a workaround by
+    generating shortened URLs to the PlantUML online server, this presents two
+    major problems:
+    - It requires an **active internet connection** to view the documentation,
+      even if you have the repository fully cloned on your machine.
+    - It introduces a **dependency** on an external service (the link shortener
+      and the PlantUML server) to remain online and functional forever.
+
+By **committing the generated image files**, we ensure the diagrams are:
+
+- ✅ **Rendered instantly** on all repository hosting services.
+- ✅ **Viewable locally and offline** by all users immediately after cloning.
+- ✅ **Independent** of external online services for display.
+
+### Why a git hook and not just CI generation?
+
+Relying _only_ on a CI pipeline to generate and push updated diagrams back to
+the repository leads to several undesirable outcomes that compromise commit
+integrity and workflow:
+
+- **Polluted commit history**: The CI system would be forced to create and push
+  commits (e.g., "[CI] Update PlantUML diagrams") after every source change.
+  This **clutters the history** with automated, non-contextual commits, making
+  the timeline harder to read and audit.
+- **Diagram synchronization gaps**: Without a pre-commit hook, the diagrams
+  would be **out of date** for the _initial_ commit that changes the source code
+  (`.puml` file). The diagrams would only become current _after_ the CI job runs
+  and pushes its follow-up commit.
+- **Complex history rewrites**: To avoid the second commit, CI would have to
+  perform **risky history rewrites** on the branch, which is often difficult,
+  disallowed, and can lead to significant synchronization issues for other
+  developers.
+
+The **pre-commit git hook** solves these issues by guaranteeing that the
+generated diagram file is **created and staged** _before_ the commit is
+finalized. This ensures that every single commit contains **synchronously
+up-to-date** diagram images, keeping the history clean and documentation
+consistent from the moment of creation.
