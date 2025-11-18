@@ -38,32 +38,9 @@ runs:
           exit 1
         fi
         HEAD="${{ github.sha }}"
-
-        COMMITS=$(git log --format="%H" --reverse "$BASE_COMMIT..$HEAD")
-
-        echo "Commits to check:"
-        echo "$COMMITS"
-
-        FAILED_COMMITS=""
-
-        for C in $COMMITS; do
-          git checkout --quiet "$C"
-
-          bash -c ${{ inputs.gen_diagrams_command }}
-
-          if [ -n "$(git status --porcelain)" ]; then
-            FAILED_COMMITS="$FAILED_COMMITS\n$C"
-            echo "DIAGRAMS NOT UP TO DATE IN COMMIT: $C"
-            if [ "${{ inputs.fail_fast }}" = "true" ]; then
-              echo "Fail-fast enabled: exiting immediately with failure."
-              exit 1
-            fi
-          fi
-          git reset --hard && git clean -fd # Remove all changes (including untracked files)
-        done
-
-        if [ -n "$FAILED_COMMITS" ]; then
-          exit 1
-        else
-          echo "All commits passed the check."
+        FAIL_FAST=""
+        if [ "${{ inputs.fail_fast }}" = "true" ]; then
+          FAIL_FAST="-f"
         fi
+
+        "${{ github.action_path }}”/check_diagrams_every_commit.sh "$FAIL_FAST" "$BASE_COMMIT" "$HEAD" ${{ inputs.gen_diagrams_command }}
