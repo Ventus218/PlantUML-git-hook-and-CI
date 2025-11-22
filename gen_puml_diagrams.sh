@@ -155,9 +155,12 @@ fi
 # If PRE_COMMIT is set we check if there are staged changes
 if ! $PRE_COMMIT || ! git diff --quiet --staged -- "$INPUT_DIR" "$OUTPUT_DIR"; then
 
-    # Pulling the image before doing anything in so that we do nothing if the pull fails
-    echo "Pulling plantuml Docker image..."
-    docker pull plantuml/plantuml:latest
+    # We match at least one space between image name and version
+    if ! docker image ls | grep "plantuml/plantuml  *latest" >/dev/null; then
+        # Pulling the image before doing anything in so that we do nothing if the pull fails
+        echo "Pulling plantuml Docker image..."
+        docker image pull plantuml/plantuml:latest
+    fi
 
     if $PRE_COMMIT; then
         # Stashing everything that is not staged (so we can build images only of what will be committed)
