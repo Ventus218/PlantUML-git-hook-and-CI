@@ -42,9 +42,9 @@ run_test() {
 }
 
 action_fails_if_diagrams_not_generated_correctly_on_first_commit() {
-    git init
+    git init --quiet
     # making initial commit
-    git commit --allow-empty --allow-empty-message -m ""
+    git commit --quiet --allow-empty --allow-empty-message -m ""
     BASE_COMMIT=$(git log -1 --format="%H")
     mkdir src
     mkdir gen
@@ -54,16 +54,16 @@ Bob -> Alice : hello
 @enduml
 EOF
     git add .
-    git commit --allow-empty-message -m ""
+    git commit --quiet --allow-empty-message -m ""
 
     ! ../../action.sh -f "$BASE_COMMIT" HEAD "../../gen_puml_diagrams.sh src gen"
 }
 run_test action_fails_if_diagrams_not_generated_correctly_on_first_commit
 
 action_succeed_if_diagrams_are_generated_correctly_on_first_commit() {
-    git init
+    git init --quiet
     # making initial commit
-    git commit --allow-empty --allow-empty-message -m ""
+    git commit --quiet --allow-empty --allow-empty-message -m ""
     BASE_COMMIT=$(git log -1 --format="%H")
     mkdir src
     mkdir gen
@@ -74,7 +74,7 @@ Bob -> Alice : hello
 EOF
     ../../gen_puml_diagrams.sh src gen
     git add .
-    git commit --allow-empty-message -m ""
+    git commit --quiet --allow-empty-message -m ""
 
     ../../action.sh -f "$BASE_COMMIT" HEAD "../../gen_puml_diagrams.sh src gen"
 }
