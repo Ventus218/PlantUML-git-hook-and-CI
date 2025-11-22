@@ -41,13 +41,14 @@ run_test() {
     cleanup
 }
 
-action_fails_if_diagrams_not_generated_correctly_on_first_commit() {
+action_fails_if_any_commit_is_bad() {
     git init --quiet
     # making initial commit
     git commit --quiet --allow-empty --allow-empty-message -m ""
     BASE_COMMIT=$(git log -1 --format="%H")
     mkdir src
     mkdir gen
+    touch gen/.gitignore # just to commit gen otherwise it would be deleted
     cat >src/d.puml <<EOF
 @startuml
 Bob -> Alice : hello
@@ -56,17 +57,18 @@ EOF
     git add .
     git commit --quiet --allow-empty-message -m ""
 
-    ! ../../action.sh -f "$BASE_COMMIT" HEAD "../../gen_puml_diagrams.sh src gen"
+    ! ../../action.sh "$BASE_COMMIT" HEAD "../../gen_puml_diagrams.sh src gen"
 }
-run_test action_fails_if_diagrams_not_generated_correctly_on_first_commit
+run_test action_fails_if_any_commit_is_bad
 
-action_succeed_if_diagrams_are_generated_correctly_on_first_commit() {
+action_succeeds_if_no_commit_is_bad() {
     git init --quiet
     # making initial commit
     git commit --quiet --allow-empty --allow-empty-message -m ""
     BASE_COMMIT=$(git log -1 --format="%H")
     mkdir src
     mkdir gen
+    touch gen/.gitignore # just to commit gen otherwise it would be deleted
     cat >src/d.puml <<EOF
 @startuml
 Bob -> Alice : hello
@@ -76,9 +78,9 @@ EOF
     git add .
     git commit --quiet --allow-empty-message -m ""
 
-    ../../action.sh -f "$BASE_COMMIT" HEAD "../../gen_puml_diagrams.sh src gen"
+    ../../action.sh "$BASE_COMMIT" HEAD "../../gen_puml_diagrams.sh src gen"
 }
-run_test action_succeed_if_diagrams_are_generated_correctly_on_first_commit
+run_test action_succeeds_if_no_commit_is_bad
 
 echo PASSED:
 for T in $PASSED; do
