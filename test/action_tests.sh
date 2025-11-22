@@ -82,6 +82,31 @@ EOF
 }
 run_test action_succeeds_if_no_commit_is_bad
 
+action_prints_bad_commits_to_stdout() {
+    git init --quiet
+    # making initial commit
+    git commit --quiet --allow-empty --allow-empty-message -m ""
+    BASE_COMMIT=$(git log -1 --format="%H")
+    mkdir src
+    mkdir gen
+    touch gen/.gitignore # just to commit gen otherwise it would be deleted
+    cat >src/d.puml <<EOF
+@startuml
+Bob -> Alice : hello
+@enduml
+EOF
+    git add .
+    git commit --quiet --allow-empty-message -m ""
+    EXPECTED_BAD_COMMIT=$(git log -1 --format="%H")
+    git commit --quiet --allow-empty --allow-empty-message -m ""
+    EXPECTED_BAD_COMMIT="$EXPECTED_BAD_COMMIT
+$(git log -1 --format="%H")"
+    OUTPUT="$(../../action.sh "$BASE_COMMIT" HEAD "../../gen_puml_diagrams.sh src gen")"
+
+    [ "$OUTPUT" = "$EXPECTED_BAD_COMMIT" ]
+}
+run_test action_prints_bad_commits_to_stdout
+
 echo PASSED:
 for T in $PASSED; do
     echo "  $T"
