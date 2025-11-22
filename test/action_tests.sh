@@ -19,12 +19,17 @@ trap cleanup EXIT
 # Takes one parameter, executes it as a command and tracks if it
 # succeds or fails, generating a report.
 # You should define your test in a function and then pass it to run_test.
-# run_test will automatically cd in a clean dir on every invocation.
+# run_test will automatically cd in a clean git dir on every invocation.
 run_test() {
     TEST="$1"
 
     mkdir "$TEST_DIR"
     cd "$TEST_DIR"
+
+    git init --quiet
+    # This is needed when running this test in CI
+    git config --local user.name "Tests"
+    git config --local user.email "tests@tests"
 
     echo "Running $TEST ..."
     if $TEST >/dev/null 2>&1; then
@@ -42,7 +47,6 @@ run_test() {
 }
 
 action_fails_if_any_commit_is_bad() {
-    git init --quiet
     # making initial commit
     git commit --quiet --allow-empty --allow-empty-message -m ""
     BASE_COMMIT=$(git log -1 --format="%H")
@@ -62,7 +66,6 @@ EOF
 run_test action_fails_if_any_commit_is_bad
 
 action_succeeds_if_no_commit_is_bad() {
-    git init --quiet
     # making initial commit
     git commit --quiet --allow-empty --allow-empty-message -m ""
     BASE_COMMIT=$(git log -1 --format="%H")
@@ -83,7 +86,6 @@ EOF
 run_test action_succeeds_if_no_commit_is_bad
 
 action_prints_bad_commits_to_stdout() {
-    git init --quiet
     # making initial commit
     git commit --quiet --allow-empty --allow-empty-message -m ""
     BASE_COMMIT=$(git log -1 --format="%H")
@@ -108,7 +110,6 @@ $(git log -1 --format="%H")"
 run_test action_prints_bad_commits_to_stdout
 
 action_stops_at_first_failing_commit_with_failfast_enabled() {
-    git init --quiet
     # making initial commit
     git commit --quiet --allow-empty --allow-empty-message -m ""
     BASE_COMMIT=$(git log -1 --format="%H")
