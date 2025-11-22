@@ -11,6 +11,8 @@ Usage:
 Description:
     Runs <command> for each commit from <base-commit> (excluded) up to <head>.
     After running <command> checks if there are any changes in the repository.
+    For each commit for which any change is found the script will print to stdout
+    the sha of that commit.
     If any change is found in any of the selected commits the script will exit with
     an error exit code.
     The idea is that for each commit you generate the diagrams through <command> and
@@ -28,6 +30,10 @@ Options:
 Examples:
     $BASENAME e575715bc1775f6e5729f9925d196de2719868b9 HEAD ./gen_puml_diagrams.sh
     $BASENAME -f e575715bc1775f6e5729f9925d196de2719868b9 29cc65688a8c056c7a6c25c87e063aabc4cd2e3c ./gen_puml_diagrams.sh
+
+Output example:
+    t575715bc1775f6e5729f9925d196de2719868b9
+    y6cc65688a8c056c7a6c25c87e063aabc4cd2e3c
 EOF
 }
 
@@ -67,18 +73,18 @@ COMMAND="$3"
 COMMIT_TO_RESTORE=$(git log -1 --format="%H")
 
 COMMITS=$(git log --format="%H" --reverse "$BASE_COMMIT..$HEAD")
-echo "Commits to check:"
-echo "$COMMITS"
+echo "Commits to check:" >&2
+echo "$COMMITS" >&2
 
-FAILED_COMMITS=""
+RESULT=true
 
 reset() {
-    git reset --hard && git clean -fd # Remove all changes (including untracked files)
+    git reset --quiet --hard && git clean --quiet -fd # Remove all changes (including untracked files)
 }
 
 cleanup() {
     reset
-    git checkout "$COMMIT_TO_RESTORE"
+    git checkout --quiet "$COMMIT_TO_RESTORE"
 }
 
 trap cleanup EXIT
@@ -86,24 +92,28 @@ trap cleanup EXIT
 for C in $COMMITS; do
     git checkout --quiet "$C"
 
-    if ! $COMMAND; then
+    if ! $COMMAND 1>&2; then
         echo "Error: Command '$COMMAND' failed for commit $C." >&2
         exit 1
     fi
 
     if [ -n "$(git status --porcelain)" ]; then
-        FAILED_COMMITS="$FAILED_COMMITS\n$C"
-        echo "DIAGRAMS NOT UP TO DATE IN COMMIT: $C"
+        # Just a way to print this line only once
+        if $RESULT; then
+            echo "Failing commits:" >&2
+        fi
+        RESULT=false
+        echo "$C"
         if $FAIL_FAST; then
-            echo "Fail-fast enabled: exiting immediately with failure."
+            echo "Fail-fast enabled: exiting immediately with failure." >&2
             break
         fi
         reset
     fi
 done
 
-if [ -n "$FAILED_COMMITS" ]; then
-    exit 1
+if $RESULT; then
+    echo "All commits passed the check." >&2
 else
-    echo "All commits passed the check."
+    exit 1
 fi
