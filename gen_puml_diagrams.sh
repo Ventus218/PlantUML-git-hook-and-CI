@@ -11,7 +11,7 @@ usage() {
     BASENAME=$(basename "$0")
     cat <<EOF
 Usage:
-    1) $BASENAME [-h] [-p] [<input-dir> <output-dir>]
+    1) $BASENAME [-h] [-p] [<input-dir> <output-dir> <plantuml-version>]
     2) $BASENAME [-h] [-p] [-c <config-file>]
 
 Description:
@@ -19,10 +19,11 @@ Description:
     <output-dir> mirroring the directory structure.
     <input-dir> and <output-dir> are directly passed to PlantUML so if you want to
     understand better how they work you should read the PlantUML CLI documentation.
+    Uses plantuml/plantuml docker image at version <plantuml-version>.
 
 Configuration file:
     When used in form number 2 the script will source a configuration file to get
-    the input and output directories.
+    PlantUML version and input/output directories.
     The configuration file can be specified by the -c option, otherwise a file
     named "$DEFAULT_CONFIG_FILE_NAME" will be recursively searched upward from
     this script location.
@@ -32,6 +33,8 @@ Configuration file:
 
         INPUT_DIR=diagrams/src
         OUTPUT_DIR=diagrams/gen
+        # The following is passed directly to docker so any valid tag is okay
+        PUML_VERSION_TAG="1.2025.10"
   
 Options:
     -h
@@ -46,8 +49,8 @@ Options:
         Path to the configuration file
 
 Examples:
-    $BASENAME diagrams/src diagrams/gen
-    $BASENAME -p diagrams/src diagrams/gen
+    $BASENAME diagrams/src diagrams/gen 1.2025.10
+    $BASENAME -p diagrams/src diagrams/gen 1.2025.10
     $BASENAME 
     $BASENAME -p -c config.sh
 EOF
@@ -57,6 +60,7 @@ PRE_COMMIT=false
 CONFIG_FILE=""
 INPUT_DIR=""
 OUTPUT_DIR=""
+PUML_VERSION_TAG=""
 
 while getopts ':hpc:' opt; do
     case $opt in
@@ -80,15 +84,18 @@ while getopts ':hpc:' opt; do
 done
 shift "$((OPTIND - 1))"
 
-if [ $# -eq 2 ]; then
-    if [ -z "$CONFIG_FILE" ]; then
-        INPUT_DIR="$1"
-        OUTPUT_DIR="$2"
-    else
+case "$#" in
+3)
+    if [ -n "$CONFIG_FILE" ]; then
+        echo "Error: use a configuration file or arguments, not both" >&2
         usage
         exit 1
     fi
-else
+    INPUT_DIR="$1"
+    OUTPUT_DIR="$2"
+    PUML_VERSION_TAG="$3"
+    ;;
+0)
     # Searching for the config file going upward in the file tree
     # if it is not already specified
     DIR=$(
@@ -133,7 +140,13 @@ else
         )
     fi
     cd "$CWD"
-fi
+    ;;
+*)
+    echo "Error: wrong number of arguments" >&2
+    usage
+    exit 1
+    ;;
+esac
 
 check_input_or_output_dir() {
     if [ ! -d "$1" ]; then
@@ -144,6 +157,14 @@ check_input_or_output_dir() {
 }
 check_input_or_output_dir "$INPUT_DIR" "input"
 check_input_or_output_dir "$OUTPUT_DIR" "output"
+if [ -z "$PUML_VERSION_TAG" ]; then
+    echo "Error: version tag is empty" >&2
+    usage
+    exit 1
+fi
+if [ "$PUML_VERSION_TAG" = "latest" ]; then
+    echo "Warning: setting PlantUML version to latest is unsafe if you also use the CI pipeline" >&2
+fi
 
 if ! command -v docker >/dev/null 2>&1; then
     echo "Error: Docker is required for generating PlantUML diagrams" >&2
@@ -155,11 +176,11 @@ fi
 # If PRE_COMMIT is set we check if there are staged changes
 if ! $PRE_COMMIT || ! git diff --quiet --staged -- "$INPUT_DIR" "$OUTPUT_DIR"; then
 
-    # We match at least one space between image name and version
-    if ! docker image ls | grep "plantuml/plantuml  *latest" >/dev/null; then
+    # We match at least one space between image name and version and a space after version
+    if ! docker image ls | grep "plantuml/plantuml  *$PUML_VERSION_TAG " >/dev/null; then
         # Pulling the image before doing anything in so that we do nothing if the pull fails
         echo "Pulling plantuml Docker image..."
-        docker image pull plantuml/plantuml:latest
+        docker image pull "plantuml/plantuml:$PUML_VERSION_TAG"
     fi
 
     if $PRE_COMMIT; then
@@ -184,7 +205,7 @@ if ! $PRE_COMMIT || ! git diff --quiet --staged -- "$INPUT_DIR" "$OUTPUT_DIR"; t
     fi
 
     echo "Generating UML diagrams"
-    if docker run --rm -v "/${TEMP_DIR}":/data plantuml/plantuml:latest -failfast2 -o ../gen //data/src; then
+    if docker run --rm -v "/${TEMP_DIR}":/data "plantuml/plantuml:$PUML_VERSION_TAG" -failfast2 -o ../gen //data/src; then
         # Substituting the generated folder with the new one
         rm -rf "$OUTPUT_DIR"
         cp -r "$TEMP_GEN" "$OUTPUT_DIR"

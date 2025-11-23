@@ -51,6 +51,13 @@ INPUT_DIR=diagrams/src
 
 # Directory where generated images (e.g., .svg, .png) will be placed
 OUTPUT_DIR=diagrams/gen
+
+# Version tag of the docker image plantuml/plantuml to use, it is passed
+# directly to docker so any valid tag is okay.
+# ("latest" should not be used when also exploiting the CI check pipeline as
+# the pipeline must know exactly what version was used for the specific commit under
+# examination
+PUML_VERSION_TAG="1.2025.10"
 ```
 
 > **Note:**
@@ -94,6 +101,12 @@ contributor has correctly installed the hook is not guaranteed.
 Our CI pipeline will check that each new commit has up-to-date diagrams.
 
 TODO: setup CI example
+
+> **Note:**
+>
+> When using the CI pipeline you it is important to check the creation of
+> diagrams by using the same PlantUML version that was used for the specific
+> commit. This is why using "latest" as PUML_VERSION_TAG is a bad idea.
 
 ## Manual execution and configuration details
 
