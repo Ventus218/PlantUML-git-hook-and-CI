@@ -205,7 +205,7 @@ if ! $PRE_COMMIT || ! git diff --quiet --staged -- "$INPUT_DIR" "$OUTPUT_DIR"; t
     fi
 
     echo "Generating UML diagrams"
-    if docker run --rm -v "/${TEMP_DIR}":/data "plantuml/plantuml:$PUML_VERSION_TAG" -failfast2 -o ../gen //data/src; then
+    if docker run --rm -v "/${TEMP_DIR}":/data "plantuml/plantuml:$PUML_VERSION_TAG" -failfast2 -o //data/gen "/data/src/**.puml"; then
         # Substituting the generated folder with the new one
         rm -rf "$OUTPUT_DIR"
         cp -r "$TEMP_GEN" "$OUTPUT_DIR"
