@@ -93,6 +93,14 @@ REPO_ROOT="$(dirname $0)/../.."
 $REPO_ROOT/gen_puml_diagrams.sh -p
 ```
 
+The main script when used in `pre-commit` mode is able to generate diagrams
+according to what is actually staged for commit. Let's say for example that you
+have modified a .puml file at line 100 and 200 but you want to split those
+changes in two different commits. If the generation script blindly generated
+diagrams based solely on the files it finds it would result in a commit that
+contains source file changed at line 100 but a diagram which displays both
+changes of line 100 and 200.
+
 ### Step 4: Setup CI
 
 While the git hook automates the process, strict enforcement that every
@@ -187,3 +195,17 @@ generated diagram file is **created and staged** _before_ the commit is
 finalized. This ensures that every single commit contains **synchronously
 up-to-date** diagram images, keeping the history clean and documentation
 consistent from the moment of creation.
+
+## Limitations
+
+At the moment we only support having a single input directory (in which plantuml
+files are searched recursively). All generated diagrams are placed directly
+inside the output folder without intermediate directories.
+
+The output folder is supposed to be completely managed by the main script and
+therefore it should not contain any other files or directories.
+
+There is no way to pass options to PlantUML.
+
+To see how these limitations could be overcome take a look at
+[this issue](https://github.com/Ventus218/PlantUML-git-hook-and-CI/issues/1)
