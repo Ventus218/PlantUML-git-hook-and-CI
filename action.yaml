@@ -32,8 +32,14 @@ runs:
           echo "Pull request detected"
         elif [ "${{ github.event_name }}" = "push" ]; then
           echo "Push detected"
+          # we do not use github.event.before as in force pushes it points to a
+          # missing commit
           BASE_COMMIT="${{ github.event.commits[0].id }}"
-          if [ -z "$BASE_COMMIT" ]; then
+          if [ -n "$BASE_COMMIT" ]; then
+            # when specifying commits a ^ means "the parent of this commit"
+            # we do this as action.sh excludes the first given commit.
+            BASE_COMMIT="$BASE_COMMIT^"
+          else
             echo "No commits in this push"
             exit 0
           fi
