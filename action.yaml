@@ -31,7 +31,7 @@ runs:
           BASE_COMMIT="${{ github.event.pull_request.base.sha }}"
           echo "Pull request detected"
         elif [ "${{ github.event_name }}" = "push" ]; then
-          BASE_COMMIT="${{ github.event.push.before }}"
+          BASE_COMMIT="${{ github.event.before }}"
         else 
           echo "Triggered by unexpected event ${{ github.event_name }}"
           echo "Only pull_request and push are supported"
