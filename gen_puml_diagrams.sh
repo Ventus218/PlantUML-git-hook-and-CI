@@ -148,15 +148,14 @@ case "$#" in
     ;;
 esac
 
-check_input_or_output_dir() {
-    if [ ! -d "$1" ]; then
-        echo "Error: invalid $2 directory \"$1\"" >&2
-        usage
-        exit 1
-    fi
-}
-check_input_or_output_dir "$INPUT_DIR" "input"
-check_input_or_output_dir "$OUTPUT_DIR" "output"
+# check input dir existence
+if [ ! -d "$INPUT_DIR" ]; then
+    echo "Error: invalid directory \"$INPUT_DIR\"" >&2
+    usage
+    exit 1
+fi
+# create output dir if it doesn't exist
+mkdir -p "$OUTPUT_DIR"
 if [ -z "$PUML_VERSION_TAG" ]; then
     echo "Error: version tag is empty" >&2
     usage
