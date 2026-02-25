@@ -43,4 +43,4 @@ runs:
           FAIL_FAST="-f"
         fi
 
-        "${{ github.action_path }}”/action.sh "$FAIL_FAST" "$BASE_COMMIT" "$HEAD" ${{ inputs.gen_diagrams_command }}
+        "${{ github.action_path }}"/action.sh "$FAIL_FAST" "$BASE_COMMIT" "$HEAD" ${{ inputs.gen_diagrams_command }}
