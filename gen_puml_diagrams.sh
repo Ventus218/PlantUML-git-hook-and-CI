@@ -124,22 +124,12 @@ case "$#" in
 
     # Paths inside the configuration file may be relative and should be interpreted
     # as relative to the configuration file, not the current working directory
-    CONFIG_DIR=$(dirname "$CONFIG_FILE")
-    CWD=$(pwd)
-    cd "$CONFIG_DIR"
-    if [ -d "$INPUT_DIR" ]; then # Don't need an else block since i'll check this again later
-        INPUT_DIR=$(
-            cd "$INPUT_DIR"
-            pwd
-        )
-    fi
-    if [ -d "$OUTPUT_DIR" ]; then # Don't need an else block since i'll check this again later
-        OUTPUT_DIR=$(
-            cd "$OUTPUT_DIR"
-            pwd
-        )
-    fi
-    cd "$CWD"
+    CONFIG_DIR=$(
+        cd "$(dirname "$CONFIG_FILE")"
+        pwd
+    )
+    INPUT_DIR="$CONFIG_DIR/$INPUT_DIR"
+    OUTPUT_DIR="$CONFIG_DIR/$OUTPUT_DIR"
     ;;
 *)
     echo "Error: wrong number of arguments" >&2
