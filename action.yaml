@@ -38,9 +38,11 @@ runs:
           exit 1
         fi
         HEAD="${{ github.sha }}"
-        FAIL_FAST=""
         if [ "${{ inputs.fail_fast }}" = "true" ]; then
           FAIL_FAST="-f"
         fi
 
-        "${{ github.action_path }}"/action.sh "$FAIL_FAST" "$BASE_COMMIT" "$HEAD" "${{ inputs.gen_diagrams_command }}"
+        # ${FAIL_FAST:+$FAIL_FAST} means "if FAIL_FAST is null or not set do nothing, otherwise insert $FAIL_FAST"
+        # which is what we want in order not to pass an empty string "". We cannot quote it, though it doesn't
+        # contain injected input
+        "${{ github.action_path }}"/action.sh ${FAIL_FAST:+$FAIL_FAST} "$BASE_COMMIT" "$HEAD" "${{ inputs.gen_diagrams_command }}"
